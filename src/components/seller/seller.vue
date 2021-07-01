@@ -1,11 +1,11 @@
 <template>
-  <div class="header">
-    我是 header
-  </div>
+  <div>I am seller</div>
 </template>
 
 <script type="text/ecmascript-6">
-export default {}
+export default {
+  name: 'seller'
+}
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus">
