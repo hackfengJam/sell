@@ -2,12 +2,16 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import App from './App'
+import VueResource from 'vue-resource'
 import VueRouter from 'vue-router'
 import goods from './components/goods/goods'
 import seller from './components/seller/seller'
 import ratings from './components/ratings/ratings'
 
+import './common/stylus/index.styl'
+
 Vue.use(VueRouter)
+Vue.use(VueResource)
 
 Vue.config.productionTip = false
 
@@ -18,7 +22,8 @@ const routes = [
 ]
 
 let router = new VueRouter({
-  routes
+  routes,
+  linkActiveClass: 'active'
 })
 
 // let app = Vue.extend(App)
@@ -32,3 +37,11 @@ new Vue({
   //  return x(App);
   // });
 }).$mount('#app')
+
+const originalPush = VueRouter.prototype.push
+
+VueRouter.prototype.push = function push (location) {
+  return originalPush.call(this, location).catch(err => err)
+}
+
+router.push('/goods')
