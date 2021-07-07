@@ -250,6 +250,7 @@ export default {
     background: rgba(7, 17, 27, 0.8)
 
     transition: all 0.5s
+    backdrop-filter: blur(10px)
 
     &.fade-transition
       opacity: 1
