@@ -1,8 +1,9 @@
 <template>
   <div class="goods">
-    <div class="menu-wrapper">
+    <div class="menu-wrapper" ref="mw">
       <ul>
-        <li v-for="item in goods" :key="item.id" class="menu-item">
+        <li v-for="(item, index) in goods" :key="item.id" class="menu-item" :class="{'current':currentIndex===index}"
+            @click="selectMenu(index, $event)">
           <span class="text border-1px">
             <span v-show="item.type > 0" class="icon" :class="classMap[item.type]"></span>{{ item.name }}
           </span>
@@ -10,9 +11,9 @@
 
       </ul>
     </div>
-    <div class="foods-wrapper">
+    <div class="foods-wrapper" ref="fw">
       <ul>
-        <li v-for="item in goods" :key="item.id" class="food-list">
+        <li v-for="item in goods" :key="item.id" class="food-list food-list-hook">
           <h1 class="title">{{ item.name }}</h1>
           <ul>
             <li v-for="food in item.foods" :key="food.id" class="food-item">
@@ -23,12 +24,12 @@
                 <h2 class="name">{{ food.name }}</h2>
                 <p class="desc">{{ food.description }}</p>
                 <div class="extra">
-                  <span class="count">月售{{ food.sellCount }}份</span>
-                  <span>好评率{{ food.rating }}%</span>
+                  <span class="count">月售{{ food.sellCount }}份</span><span>好评率{{ food.rating }}%</span>
                 </div>
                 <div class="price">
-                  <span class="now">￥{{ food.price }}</span>
-                  <span class="old" v-show="food.oldPrice">￥{{ food.oldPrice }}</span>
+                  <span class="now">￥{{ food.price }}</span><span class="old" v-show="food.oldPrice">￥{{
+                    food.oldPrice
+                  }}</span>
                 </div>
               </div>
             </li>
@@ -41,6 +42,7 @@
 
 <script type="text/ecmascript-6">
 import AppData from '../../../build/data'
+import BScroll from 'better-scroll'
 
 // const ERR_OK = 0
 export default {
@@ -52,7 +54,9 @@ export default {
   },
   data () {
     return {
-      goods: []
+      goods: [],
+      listHeight: [],
+      scrollY: 0
     }
   },
   created () {
@@ -62,8 +66,60 @@ export default {
     //   resp = resp.body
     //   if (resp.body === ERR_OK) {
     //     this.goods = resp.data
+    //     this.$nextTick(() => {
+    //       this._initScroll()
+    //       this._calculateHeight()
+    //     })
     //   }
     // })
+  },
+  mounted () {
+    this._initScroll()
+    this._calculateHeight()
+  },
+  computed: {
+    currentIndex () {
+      for (let i = 0; i < this.listHeight.length; i++) {
+        let height = this.listHeight[i]
+        let heightNext = this.listHeight[i + 1]
+        if (!heightNext || (this.scrollY >= height && this.scrollY < heightNext)) {
+          return i
+        }
+      }
+      return 0
+    }
+  },
+  methods: {
+    selectMenu (index, event) {
+      if (!event._constructed) {
+        return
+      }
+      let foodList = this.$refs.fw.getElementsByClassName('food-list-hook')
+      let el = foodList[index]
+      this.foodsScroll.scrollToElement(el, 300)
+    },
+    _initScroll () {
+      this.meunScroll = new BScroll(this.$refs.mw, {
+        click: true
+      })
+      this.foodsScroll = new BScroll(this.$refs.fw, {
+        probeType: 3 // 探针
+      })
+
+      this.foodsScroll.on('scroll', (pos) => {
+        this.scrollY = Math.abs(Math.round(pos.y))
+      })
+    },
+    _calculateHeight () {
+      let foodList = this.$refs.fw.getElementsByClassName('food-list-hook')
+      let height = 0
+      this.listHeight.push(height)
+      for (let i = 0; i < foodList.length; i++) {
+        let item = foodList[i]
+        height += item.clientHeight
+        this.listHeight.push(height)
+      }
+    }
   }
 }
 </script>
@@ -89,6 +145,16 @@ export default {
       width: 56px
       padding: 0 12px
       line-height: 14px
+
+      &.current
+        position: relative
+        z-index: 10
+        margin-top: -1px
+        background: #fff
+        font-weight: 700
+
+        .text
+          border-none()
 
       .icon
         display: inline-block
@@ -165,11 +231,12 @@ export default {
 
         .desc
           margin-bottom: 8px
+          line-height: 14px
 
         .extra
           line-height: 10px
 
-          &.count
+          .count
             margin-right: 12px
 
         .price
